@@ -1,26 +1,49 @@
-const dbConnection=require('../config/connection');
+const dbConnection = require('../config/connection');
 
-const postFeaturesService=(featuresData,callback)=>{
-    const query='INSERT INTO features (name,description) VALUES (?,?)';
-    dbConnection.query(query,
-        [
-            featuresData.name,
-            featuresData.description
-        ],
-        (error,result)=>{
-            callback(error,result)
-        }
-    )
+const postFeaturesService = async (featuresData) => {
+    const query = 'INSERT INTO features (name,description) VALUES (?,?)';
+
+    const [result] = await dbConnection.query(query, [
+        featuresData.name,
+        featuresData.description
+    ]);
+    return result;
 }
 
-const getAllFeaturesService=(callback)=>{
-    const query='SELECT * FROM features';
-    dbConnection.query(query,(error,result)=>{
-        callback(error,result)
-    })
+const getAllFeaturesService = async () => {
+    const [result] = await dbConnection.query('SELECT * FROM features');
+    return result;
 }
 
-module.exports={
+const getFeaturesByIdService = async (featuresId) => {
+    const [result] = await dbConnection.query('SELECT * FROM features WHERE id=?',
+        [featuresId]
+    );
+    return result;
+}
+
+const updateFeaturesService = async (featuresId, featuresData) => {
+    const features = {
+        name: featuresData.name,
+        description: featuresData.description
+    }
+    const [result] = await dbConnection.query(`UPDATE features SET ? WHERE id=?`,
+        [features, featuresId]
+    );
+    return result;
+}
+
+const deleteFeaturesService = async (featuresId) => {
+    const [result] = await dbConnection.query('DELETE FROM features WHERE id=?',
+        [featuresId]
+    );
+    return result;
+}
+
+module.exports = {
     postFeaturesService,
-    getAllFeaturesService
+    getAllFeaturesService,
+    getFeaturesByIdService,
+    updateFeaturesService,
+    deleteFeaturesService
 }

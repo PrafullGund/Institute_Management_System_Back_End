@@ -53,10 +53,31 @@ const deleteUsersService=(usersId,callback)=>{
     })
 }
 
-const getUserByEmail=(email,password)=>{
-    const userInfo=userCredentialService.getUserInfo(email,password);
-    return userInfo;
-}
+// const getUserByEmail=(email,password)=>{
+//     const userInfo=userCredentialService.getUserInfo(email,password);
+//     return userInfo;
+// }
+const getUserByEmail = async (email) => {
+    const query = `
+        SELECT 
+            u.id as userId,
+            u.firstName,
+            u.lastName,
+            u.dob,
+            u.userTypeId,
+            uc.password,
+            uc.email,
+            r.name AS role
+        FROM users u
+        JOIN usercredentials uc ON u.id = uc.userId
+        LEFT JOIN userRoleMapper urm ON u.id = urm.userId
+        LEFT JOIN roles r ON urm.roleId = r.id
+        WHERE uc.email = ?
+        LIMIT 1;
+    `;
+    const [rows] = await dbConnection.promise().query(query, [email]);
+    return rows[0]; 
+};
 
 async function getUserFeatures(userId){
     const query=`SELECT DISTINCT f.name FROM FeatureRoleMapping fr JOIN features f ON fr.featureId=f.id JOIN userRoleMapper urm ON fr.roleId=urm.roleId WHERE urm.userId=?`;

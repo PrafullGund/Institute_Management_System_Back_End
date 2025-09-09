@@ -1,69 +1,79 @@
+const userTypeJoi = require('../userType/userTypeJoi');
 const userTypeService = require('../userType/userTypeService');
 
-const postUserTypeController = (req, res) => {
-    const userTypeData = req.body;
-    userTypeService.postUserTypeService(userTypeData, (error, result) => {
+const postUserTypeController = async (req, res) => {
+    try {
+        const { error } = userTypeJoi.postUserTypeJoi.validate(req.body);
+
         if (error) {
-            return res.status(500).json({ success: false, message: error.message });
+            return res.status(400).json({ success: false, message: error.details[0].message });
         }
-        res.status(200).json({ success: "UserType Added Successfully" });
-    });
+
+        const userType = await userTypeService.postUserTypeService(req.body);
+        res.status(201).json({ success:true ,message:'UserType Added Successfully', data: userType });
+
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Internal Server Error' })
+    }
+}
+
+const getAllUserTypeController = async (req, res) => {
+    try {
+        const userType = await userTypeService.getAllUserTypeService();
+        res.status(200).json({ success: true, data: userType });
+    } catch (err) {
+        console.error('Error in getAllUserTypeController:', err);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
 };
 
-const getAllUserTypeController = (req, res) => {
-    userTypeService.getAllUserTypeService((error, result) => {
-        if (error) {
-            return res.status(500).json({ success: false, message: error.message });
-        }
-        res.status(200).json({ success: true, data: result });
-    });
-}
+const getUserTypeIdController = async (req, res) => {
+    try {
+        const userTypeId = req.params.id;
+        const result = await userTypeService.getUserTypeIdService(userTypeId);
 
-const getUserTypeIdController = (req, res) => {
-    const userTypeId = req.params.id;
-    userTypeService.getUserTypeByIdService(userTypeId, (error, result) => {
-        if (error) {
-            res.status(500).json({ success: false, message: error.message });
+        if (result.length === 0) {
+            return res.status(404).json({ success: false, message: 'User Type Not Found' });
+        }
+
+        res.status(200).json({ success: true, data: result[0] });
+
+    } catch (err) {
+        console.error('Error in getUserTypeIdController:', err);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
+const updateUserTypeController = async (req, res) => {
+    try {
+        const userTypeId = req.params.id;
+        const userTypeData = req.body;
+
+        const result = await userTypeService.updateUserTypeService(userTypeId, userTypeData);
+
+        if (result.affectedRows > 0) {
+            res.status(200).json({ success: true, message: 'User Type Updated Successfully' });
         } else {
-            if (result.length === 0) {
-                res.status(404).json({ success: false, message: 'User Type Not Found' })
-            } else {
-                res.status(200).json({ success: true, data: result[0] })
-            }
+            res.status(404).json({ success: false, message: 'User Type Not Found' });
         }
-    })
-}
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
 
-const updateUserTypeController = (req, res) => {
-    const userTypeId = req.params.id;
-    const userData = req.body;
+const deleteUserTypeController=async (req,res)=>{
+    try{
+        const userTypeId=req.params.id;
+        const result=await userTypeService.deleteUserTypeService(userTypeId);
 
-    userTypeService.updateUserTypeService(userTypeId, userData, (error, result) => {
-        if (error) {
-            res.status(500).json({ sucess: false, message: error.message });
-        } else {
-            if (result.affectedRows > 0) {
-                res.status(200).json({ success: true, message: 'User Type Update Successfully' });
-            } else {
-                res.status(404).json({ sucess: false, message: 'User Type not found' })
-            }
+        if(result.affectedRows > 0){
+            res.status(200).json({success:true,message:'User Type Deleted Successfully'})
+        }else{
+            res.status(404).json({success:false,message:'User Type Not Found'})
         }
-    })
-}
-
-const deleteUserTypeController = (req, res) => {
-    const userTypeId = req.params.id;
-    userTypeService.deleteUserTypeService(userTypeId, (error, result) => {
-        if (error) {
-            res.status(500).json({ success: false, message: error.message });
-        } else {
-            if (result.affectedRows > 0) {
-                res.status(200).json({ success: true, message: 'User Type Delete Successfully' });
-            } else {
-                res.status(404).json({ success: false, message: 'User Type Not Found' })
-            }
-        }
-    })
+    }catch (err) {
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
 }
 
 module.exports = {

@@ -1,7 +1,7 @@
 const dbConnection = require('../config/connection');
 
 const postUserTypeService = (userTypeData, callback) => {
-    const query = `INSERT INTO userType (userTypeName, userTypeDescription) VALUES (?, ?)`;
+    const query = 'INSERT INTO userType (userTypeName,userTypeDescription) VALUES (?,?)';
 
     dbConnection.query(query,
         [
@@ -14,46 +14,42 @@ const postUserTypeService = (userTypeData, callback) => {
     );
 };
 
-const getAllUserTypeService = (callback) => {
-    const query = `SELECT * FROM userType`;
-    dbConnection.query(query, (error, result) => {
-        callback(error, result);
-    })
-}
+const getAllUserTypeService = async () => {
+    const [rows] = await dbConnection.query('SELECT * FROM userType');
+    return rows;
+};
 
-const getUserTypeByIdService = (userTypeId, callback) => {
-    const query = 'SELECT * FROM userType WHERE id=?';
-    dbConnection.query(query, [userTypeId], (error, result) => {
-        callback(error, result)
-    })
-}
+const getUserTypeIdService = async (userTypeId) => {
+    const [rows] = await dbConnection.query('SELECT * FROM userType WHERE id = ?', [userTypeId]);
+    return rows;
+};
 
-const updateUserTypeService = (userTypeId, userTypeData, callback) => {
-    const query = `UPDATE userType SET userTypeName=?, userTypeDescription=? WHERE id=?`;
-    dbConnection.query(query,
-        [
-            userTypeData.userTypeName,
-            userTypeData.userTypeDescription,
-            userTypeId
-        ],
-        (error, result) => {
-            callback(error, result)
-        }
-    )
-}
+const updateUserTypeService = async (userTypeId, userTypeData) => {
+    const userType = {
+        userTypeName: userTypeData.userTypeName,
+        userTypeDescription: userTypeData.userTypeDescription
+    };
 
-const deleteUserTypeService = (userTypeId, callback) => {
-    const query = 'DELETE FROM userType WHERE id=?';
-    dbConnection.query(query, [userTypeId], (error, result) => {
-        callback(error, result)
-    }
-    )
+    const [result] = await dbConnection.query(
+        'UPDATE userType SET ? WHERE id = ?',
+        [userType, userTypeId]
+    );
+
+    return result;
+};
+
+const deleteUserTypeService=async(userTypeId)=>{
+    const [result]= await dbConnection.query(
+        'DELETE FROM userType WHERE id=?',
+        [userTypeId]
+    );
+    return result;
 }
 
 module.exports = {
     postUserTypeService,
     getAllUserTypeService,
-    getUserTypeByIdService,
+    getUserTypeIdService,
     updateUserTypeService,
     deleteUserTypeService
 }

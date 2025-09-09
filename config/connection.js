@@ -1,11 +1,6 @@
-const mysql=require('mysql2');
-const config=require('./config.json');
+const mysql = require('mysql2/promise');
+const config = require('./config.json');
 
-const connection=mysql.createConnection(config.development);
+const pool = mysql.createPool(config.development); 
 
-connection.connect(function(err){
-    if(err)throw err;
-    console.log("Database Connected");
-})
-
-module.exports=connection;
+module.exports = pool;

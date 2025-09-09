@@ -1,44 +1,62 @@
-const dbConnection=require('../config/connection');
+const dbConnection = require('../config/connection');
+const bcrypt = require('bcrypt');
 
-const postUserCredentialsService=(userCredentialsData,callback)=>{
-    const query='INSERT INTO userCredentials (userId,email,mobile,password) VALUES (?,?,?,?)';
-    dbConnection.query(query,
-        [
-            userCredentialsData.userId,
-            userCredentialsData.email,
-            userCredentialsData.mobile,
-            userCredentialsData.password
-        ],
-        (error,result)=>{
-            callback(error,result)
-        }
-    )
+const postUserCredentialsService = async (userCredentialsData) => {
+    const hashPassword = await bcrypt.hash(userCredentialsData.password, 10);
+
+    const query = `
+        INSERT INTO userCredentials (userId, email, mobile, password)
+        VALUES (?, ?, ?, ?)
+    `;
+
+    const [result] = await dbConnection.query(query, [
+        userCredentialsData.userId,
+        userCredentialsData.email,
+        userCredentialsData.mobile,
+        hashPassword
+    ]);
+
+    return result;
+};
+
+const getAllUserCredentialsService=async ()=>{
+    const [result]=await dbConnection.query('SELECT * FROM userCredentials')
+    return result;
 }
 
-const getAllUserCredentialsService=(callback)=>{
-    const query ='SELECT *FROM userCredentials';
-    dbConnection.query(query,(error,result)=>{
-        callback(error,result)
-    })
+const getUserCredentialsByIdService=async(userId)=>{
+    const [result]=await dbConnection.query('SELECT * FROM userCredentials WHERE id=?',userId);
+    return result;
 }
 
-const getUserInfo=(email,password)=>{
-    const query=`SELECT * FROM userCredentials uc JOIN users u ON uc.id=u.id WHERE uc.email=? LIMIT 1`;
-    return new Promise((resolve,reject)=>{
-        dbConnection.query(query,[email],(error,results)=>{
-            if(error){
-                console.log("Error while querying the database:", error);
-                reject(error);
-            }else{
-                resolve(results[0]);
-            }
-        })
-    })
+const updateUserCredentialsService = async (userCredentialsId, userCredentialsData) => {
+    const hashPassword = await bcrypt.hash(userCredentialsData.password, 10);
+
+    const userCredentials = {
+        userId: userCredentialsData.userId,
+        email: userCredentialsData.email,
+        mobile: userCredentialsData.mobile,
+        password: hashPassword 
+    };
+
+    const [result] = await dbConnection.query(
+        `UPDATE userCredentials SET ? WHERE id = ?`,
+        [userCredentials, userCredentialsId] 
+    );
+
+    return result;
+};
+
+const deleteUserCredentialsService=async (userCredentialsId)=>{
+    const [result]=await dbConnection.query('DELETE FROM userCredentials WHERE id=?', [userCredentialsId]);
+    return result;
 }
 
 
-module.exports={
+module.exports = {
     postUserCredentialsService,
     getAllUserCredentialsService,
-    getUserInfo
-}
+    getUserCredentialsByIdService,
+    updateUserCredentialsService,
+    deleteUserCredentialsService
+};
