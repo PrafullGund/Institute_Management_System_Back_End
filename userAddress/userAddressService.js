@@ -1,6 +1,6 @@
 const dbConnection = require('../config/connection');
 
-const postUserCredentialsService = async (userAddressData) => {
+const postUserAddressService = async (userAddressData) => {
     const query = 'INSERT INTO userAddresses (userId,addressLineOne,addressLineTwo,country,state,city,postalCode) VALUES (?,?,?,?,?,?,?)';
 
     const [result] = await dbConnection.query(query, [
@@ -50,7 +50,7 @@ const deleteUserAddressService=async (userAddressId)=>{
 
 
 module.exports = {
-    postUserCredentialsService,
+    postUserAddressService,
     getAllUserAddressService,
     getUserAddressByIdService,
     updateUserAddressService,
