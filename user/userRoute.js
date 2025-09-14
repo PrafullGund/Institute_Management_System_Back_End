@@ -9,6 +9,8 @@ router.get('/register/:id',userController.getRegisterUserByIdController)
 router.put('/register/:id',userController.updateRegisterUserController);
 router.delete('/register/:id',userController.deleteRegisterUserController);
 
+router.get('/userSearch',userController.searchRegisterUsersController);
+
 router.post('/user',userController.postUserController);
 router.get('/user',userController.getAllUserController);
 router.get('/user/:id',userController.getUserByIdController);

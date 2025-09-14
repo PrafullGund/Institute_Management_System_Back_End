@@ -204,6 +204,18 @@ const deleteRegisterUserController = async (req, res) => {
     }
 };
 
+const searchRegisterUsersController = async (req, res) => {
+    try {
+        const search = req.query.search || '';
+        const users = await userService.searchRegisterUsersService(search);
+        return res.status(200).json({ success: true, data: users });
+    } catch (error) {
+        console.error('Search Users Error:', error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
 module.exports = {
     postUserController,
     getAllUserController,
@@ -216,5 +228,6 @@ module.exports = {
     getRegisterUserByIdController,
     updateRegisterUserController,
     deleteRegisterUserController,
-    logout
+    logout,
+    searchRegisterUsersController
 }
