@@ -3,6 +3,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const usersService = require('../user/userService');
 
+let tokenBlacklist=[];
+
 const authenticationService = {
     async signIn(req, res) {
         var data = req.body;
@@ -43,6 +45,25 @@ const authenticationService = {
                 message: 'Invalid username and password..!'
             })
         }
+    },
+
+    async logout(req,res){
+        try{
+            const bearerToken = req.get("Authorization");
+              if (!bearerToken) {
+                return res.status(401).json({ success: false, message: "Token not provided" });
+            }
+
+            const token = bearerToken.split(" ")[1];
+            tokenBlacklist.push(token); 
+
+            return res.status(200).json({ success: true, message: "Logout successfully...!" });
+        }catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    },
+      isTokenBlacklisted(token) {
+        return tokenBlacklist.includes(token);
     }
 }
 

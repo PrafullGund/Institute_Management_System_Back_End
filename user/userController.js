@@ -88,6 +88,14 @@ const signIn=async(req,res)=>{
     }
 }
 
+const logout = async (req, res) => {
+    try {
+        await authenticationService.logout(req, res);
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 const addUser = async (req, res) => {
     try {
         const data = req.body;
@@ -207,5 +215,6 @@ module.exports = {
     getAllRegisterUsersController,
     getRegisterUserByIdController,
     updateRegisterUserController,
-    deleteRegisterUserController
+    deleteRegisterUserController,
+    logout
 }
