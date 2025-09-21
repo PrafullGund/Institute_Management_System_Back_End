@@ -125,8 +125,10 @@ const addUser = async (req, res) => {
 
 const getAllRegisterUsersController = async (req, res) => {
     try {
-        const users = await userService.getAllRegisterUsersService();
-        return res.status(200).json({ success: true, data: users });
+        const page=parseInt(req.query.page) || 1;
+        const limit=parseInt(req.query.limit) || 10;
+        const users = await userService.getAllRegisterUsersService(page,limit);
+        return res.status(200).json({ success: true, ...users });
     } catch (error) {
         console.error('Get All Users Error:', error);
         return res.status(500).json({ success: false, message: error.message });
@@ -207,14 +209,21 @@ const deleteRegisterUserController = async (req, res) => {
 const searchRegisterUsersController = async (req, res) => {
     try {
         const search = req.query.search || '';
-        const users = await userService.searchRegisterUsersService(search);
-        return res.status(200).json({ success: true, data: users });
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        const result = await userService.searchRegisterUsersService(search, page, limit);
+
+        if(!result.users || result.users.length===0){
+            return res.status(404).json({success:false,message:'No users found matching "${search}"'});
+        }
+
+        return res.status(200).json({ success: true, ...result });
     } catch (error) {
         console.error('Search Users Error:', error);
         return res.status(500).json({ success: false, message: error.message });
     }
-};
-
+}
 
 module.exports = {
     postUserController,

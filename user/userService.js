@@ -123,9 +123,10 @@ const addUserService = async (userPayload, credentialsPayload, addressPayload, e
     }
 };
 
-const getAllRegisterUsersService = async () => {
+const getAllRegisterUsersService = async (page = 1, limit = 10) => {
     const connection = await dbConnection.getConnection();
     try {
+        const offset = (page - 1) * limit;
         const [rows] = await connection.query(`
             SELECT u.id AS userId, u.firstName, u.lastName, u.dob, u.userTypeId,
                    c.email, c.mobile,
@@ -136,15 +137,19 @@ const getAllRegisterUsersService = async () => {
             LEFT JOIN userAddresses a ON u.id = a.userId
             LEFT JOIN userEducationDetails e ON u.id = e.userId
             ORDER BY u.id DESC
-        `);
+            LIMIT ? OFFSET ?
+        `, [parseInt(limit), parseInt(offset)]);
 
-        return rows;
+        const [countRows] = await connection.query(`SELECT COUNT(*) AS total FROM user`);
+        const total = countRows[0].total;
+
+        return { users: rows, total, page, limit };
     } catch (error) {
         throw error;
     } finally {
         connection.release();
     }
-};
+}
 
 const getRegisterUserByIdService = async (userId) => {
     const connection = await dbConnection.getConnection();
@@ -238,36 +243,55 @@ const deleteRegisterUserService = async (userId) => {
     }
 };
 
-const searchRegisterUsersService = async (searchTerm) => {
+const searchRegisterUsersService = async (searchTerm, page = 1, limit = 10) => {
     const connection = await dbConnection.getConnection();
-
     try {
+        const offset = (page - 1) * limit;
         const likeQuery = `%${searchTerm}%`;
+
         const [rows] = await connection.query(`
             SELECT u.id AS userId, u.firstName, u.lastName,
-                    c.email, c.mobile,
-                     CONCAT(a.addressLineOne, ' ', IFNULL(a.addressLineTwo,'')) AS address,
+                   c.email, c.mobile,
+                   CONCAT(a.addressLineOne, ' ', IFNULL(a.addressLineTwo,'')) AS address,
                    e.educationTitle
             FROM user u
             LEFT JOIN userCredentials c ON u.id=c.userId
             LEFT JOIN userAddresses a ON u.id=a.userId
             LEFT JOIN userEducationDetails e ON u.id=e.userId
             WHERE u.firstName LIKE ?
-                 OR u.lastName LIKE ?
+               OR u.lastName LIKE ?
                OR c.email LIKE ?
                OR c.mobile LIKE ?
                OR a.addressLineOne LIKE ?
                OR a.addressLineTwo LIKE ?
                OR e.educationTitle LIKE ?
             ORDER BY u.id DESC
-                   `, [likeQuery, likeQuery, likeQuery, likeQuery, likeQuery, likeQuery, likeQuery]);
-        return rows;
+            LIMIT ? OFFSET ?
+        `, [likeQuery, likeQuery, likeQuery, likeQuery, likeQuery, likeQuery, likeQuery, parseInt(limit), parseInt(offset)]);
+
+        const [countRows] = await connection.query(`
+            SELECT COUNT(*) AS total
+            FROM user u
+            LEFT JOIN userCredentials c ON u.id=c.userId
+            LEFT JOIN userAddresses a ON u.id=a.userId
+            LEFT JOIN userEducationDetails e ON u.id=e.userId
+            WHERE u.firstName LIKE ?
+               OR u.lastName LIKE ?
+               OR c.email LIKE ?
+               OR c.mobile LIKE ?
+               OR a.addressLineOne LIKE ?
+               OR a.addressLineTwo LIKE ?
+               OR e.educationTitle LIKE ?
+        `, [likeQuery, likeQuery, likeQuery, likeQuery, likeQuery, likeQuery, likeQuery]);
+
+        const total = countRows[0].total;
+        return { users: rows, total, page, limit };
     } catch (error) {
         throw error;
     } finally {
         connection.release();
     }
-}
+};
 
 module.exports = {
     postUserService,

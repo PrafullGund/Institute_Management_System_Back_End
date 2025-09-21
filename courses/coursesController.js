@@ -63,10 +63,117 @@ const deleteCoursesController = async (req, res) => {
     }
 }
 
+const addCourseController = async (req, res) => {
+    try {
+        const data = req.body;
+
+        const requiredFields = [
+            'typeName','courseName','courseFees','courseDuration','courseMode'
+        ];
+
+        const missing = requiredFields.filter(f => !data[f]);
+        if (missing.length) {
+            return res.status(400).json({
+                success: false,
+                message: `Missing fields: ${missing.join(', ')}`
+            });
+        }
+
+        const courseTypePayload = {
+            typeName: data.typeName,
+            description: data.description || null
+        };
+
+        const coursePayload = {
+            courseName: data.courseName,
+            description: data.description || null,
+            courseFees: data.courseFees,
+            courseDuration: data.courseDuration,
+            courseMode:data.courseMode
+        };
+
+        const result = await coursesService.addCourseService(courseTypePayload, coursePayload);
+
+        return res.status(200).json({
+            success: true,
+            message: 'Course Added Successfully..!',
+            courseTypeId: result.courseTypeId
+        });
+
+    } catch (error) {
+        console.error('Add Course Error:', error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const getCoursesWithTypeController = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10; 
+        const result = await coursesService.getCoursesWithTypeService(page, limit);
+        res.status(200).json({ success: true, data: result });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const getCoursesWithTypeByIdController=async(req,res)=>{
+    try {
+        const { id } = req.params;
+        const result = await coursesService.getCoursesWithTypeByIdService(id);
+
+        if (!result) {
+            return res.status(404).json({ success: false, message: "Course not found" });
+        }
+        return res.status(200).json({ success: true, data: result });
+    } catch (error) {
+        console.error('Get Course By ID Error:', error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+const updateCourseWithTypeService=async(req,res)=>{
+    try {
+        const { id } = req.params;
+        const data = req.body;
+
+        const result = await coursesService.updateCourseWithTypeService(id, data);
+
+        if (!result.affectedRows) {
+            return res.status(404).json({ success: false, message: "Course not found" });
+        }
+
+        return res.status(200).json({ success: true, message: "Course updated successfully" });
+    } catch (error) {
+        console.error('Update Course Error:', error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+const deleteCourseWithTypeService=async(req,res)=>{
+    try{
+        const {id}=req.params;
+
+        const result=await coursesService.deleteCourseWithTypeService(id);
+        if(!result.affectedRows){
+            return res.status(404).json({ success: false, message: "Course not found" });
+        }
+        return res.status(200).json({success:true,message:"Course deleted successfully"})
+    }catch (error) {
+        console.error('Update Course Error:', error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+}
+
 module.exports = {
     postCoursesController,
     getAllCoursesController,
     getByIdCourseController,
     updateCoursesController,
-    deleteCoursesController
+    deleteCoursesController,
+    addCourseController,
+    getCoursesWithTypeController,
+    getCoursesWithTypeByIdController,
+    updateCourseWithTypeService,
+    deleteCourseWithTypeService
 }
